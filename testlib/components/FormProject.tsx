@@ -1,77 +1,109 @@
-import React, { useState } from 'react';
-import {
-  Button,
-  Cascader,
-  DatePicker,
-  Form,
-  Input,
-  InputNumber,
-  Radio,
-  Select,
-  Switch,
-  TreeSelect,
-} from 'antd';
+import React from 'react';
+import { Button, DatePicker, Form, Input, InputNumber, Select } from 'antd';
+import type { Dayjs } from 'dayjs';
 
-type SizeType = Parameters<typeof Form>[0]['size'];
+type ProjectPriority = 'low' | 'medium' | 'high';
+
+export interface ProjectFormValues {
+  name: string;
+  description: string;
+  priority: ProjectPriority;
+  categories: string[];
+  deadline: Dayjs | null;
+  budget: number;
+}
+
+const required = (message: string) => ({ required: true, message });
+
+const nameRule = [
+  required('Введите название проекта'),
+  { min: 3, message: 'Минимум 3 символа' },
+];
+
+const descriptionRule = [required('Введите описание')];
+
+const priorityRule = [required('Выберите приоритет')];
+
+const categoriesRule = [
+  required('Выберите хотя бы одну категорию'),
+  {
+    validator: (_: unknown, value: string[]) =>
+      Array.isArray(value) && value.length > 0
+        ? Promise.resolve()
+        : Promise.reject('Нужно выбрать минимум одну категорию'),
+  },
+];
+
+const deadlineRule = [required('Выберите дедлайн')];
+
+const budgetRule = [
+  required('Укажите бюджет'),
+  {
+    type: 'number' as const,
+    min: 0,
+    message: 'Бюджет не может быть отрицательным',
+  },
+];
+
+const priorities: { label: string; value: ProjectPriority }[] = [
+  { label: 'Низкий', value: 'low' },
+  { label: 'Средний', value: 'medium' },
+  { label: 'Высокий', value: 'high' },
+];
+
+const categoryOptions: { label: string; value: string }[] = [
+  { label: 'Web', value: 'web' },
+  { label: 'Mobile', value: 'mobile' },
+  { label: 'ML', value: 'ml' },
+  { label: 'Research', value: 'research' },
+];
 
 const FormProject: React.FC = () => {
-  const [componentSize, setComponentSize] = useState<SizeType | 'default'>('default');
+  const [form] = Form.useForm<ProjectFormValues>();
 
-  const onFormLayoutChange = ({ size }: { size: SizeType }) => {
-    setComponentSize(size);
+  const onFinish = (values: ProjectFormValues) => {
+    const result = {
+      ...values,
+      deadline: values.deadline ? values.deadline.toDate() : null,
+    } as Omit<ProjectFormValues, 'deadline'> & { deadline: Date | null };
+    // eslint-disable-next-line no-console
+    console.log('Project submit:', result);
   };
 
   return (
-    <Form
-      labelCol={{ span: 4 }}
-      wrapperCol={{ span: 14 }}
-      layout="horizontal"
-      initialValues={{ size: componentSize }}
-      onValuesChange={onFormLayoutChange}
-      size={componentSize as SizeType}
-      style={{ maxWidth: 600 }}
+    <Form<ProjectFormValues>
+      form={form}
+      layout="vertical"
+      style={{ maxWidth: 720 }}
+      onFinish={onFinish}
+      initialValues={{ priority: 'medium', categories: [], deadline: null }}
     >
-      <Form.Item label="Form Size" name="size">
-        <Radio.Group>
-          <Radio.Button value="small">Small</Radio.Button>
-          <Radio.Button value="default">Default</Radio.Button>
-          <Radio.Button value="large">Large</Radio.Button>
-        </Radio.Group>
+      <Form.Item<ProjectFormValues> label="Название" name="name" rules={nameRule}>
+        <Input placeholder="Введите название проекта" allowClear />
       </Form.Item>
-      <Form.Item label="Input">
-        <Input />
+
+      <Form.Item<ProjectFormValues> label="Описание" name="description" rules={descriptionRule}>
+        <Input.TextArea placeholder="Краткое описание" rows={4} showCount maxLength={500} />
       </Form.Item>
-      <Form.Item label="Select">
+
+      <Form.Item<ProjectFormValues> label="Приоритет" name="priority" rules={priorityRule}>
+        <Select<ProjectPriority> options={priorities} placeholder="Выберите приоритет" />
       </Form.Item>
-      <Form.Item label="TreeSelect">
-        <TreeSelect
-          treeData={[
-            { title: 'Light', value: 'light', children: [{ title: 'Bamboo', value: 'bamboo' }] },
-          ]}
-        />
+
+      <Form.Item<ProjectFormValues> label="Категории" name="categories" rules={categoriesRule}>
+        <Select<string[]> mode="multiple" options={categoryOptions} placeholder="Выберите категории" allowClear />
       </Form.Item>
-      <Form.Item label="Cascader">
-        <Cascader
-          options={[
-            {
-              value: 'zhejiang',
-              label: 'Zhejiang',
-              children: [{ value: 'hangzhou', label: 'Hangzhou' }],
-            },
-          ]}
-        />
+
+      <Form.Item<ProjectFormValues> label="Дедлайн" name="deadline" rules={deadlineRule}>
+        <DatePicker style={{ width: '100%' }} />
       </Form.Item>
-      <Form.Item label="DatePicker">
-        <DatePicker />
+
+      <Form.Item<ProjectFormValues> label="Бюджет" name="budget" rules={budgetRule}>
+        <InputNumber style={{ width: '100%' }} placeholder="Укажите бюджет" addonAfter="₽" />
       </Form.Item>
-      <Form.Item label="InputNumber">
-        <InputNumber />
-      </Form.Item>
-      <Form.Item label="Switch" valuePropName="checked">
-        <Switch />
-      </Form.Item>
-      <Form.Item label="Button">
-        <Button>Button</Button>
+
+      <Form.Item>
+        <Button type="primary" htmlType="submit">Создать проект</Button>
       </Form.Item>
     </Form>
   );
