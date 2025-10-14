@@ -12,11 +12,7 @@ import {
   VStack,
   Text,
 } from '@chakra-ui/react';
-// Removed color mode toggle to align with installed Chakra v3 exports
 
-// Using default theme (compatible with Chakra v3)
-
-// useModal hook
 type UseModalReturn = {
   isOpen: boolean;
   open: () => void;
@@ -28,7 +24,6 @@ function useModal(): UseModalReturn {
   return { isOpen: disc.open, open: disc.onOpen, close: disc.onClose };
 }
 
-// Form types
 type UserRole = 'Admin' | 'User' | 'Manager';
 
 interface UserFormValues {
@@ -38,7 +33,6 @@ interface UserFormValues {
   department: string;
 }
 
-// Theme toggle removed for Chakra v3 minimal setup
 
 function UserModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [values, setValues] = React.useState<UserFormValues>({
